@@ -27,6 +27,7 @@ const server=http.createServer(async(req,res)=>{ try {
  if(url.pathname==='/api/login' && req.method==='POST') { const ip=req.socket.remoteAddress; let attempt=attempts.get(ip); if(!attempt || attempt.until<Date.now()) attempt={count:0,until:Date.now()+900000}; if(attempt.count>=10) return json(res,429,{error:'Muitas tentativas. Aguarde 15 minutos.'}); const b=await body(req); if(!validPassword(b.password)) {attempt.count++; attempts.set(ip,attempt); return json(res,401,{error:'Senha incorreta.'});} const token=crypto.randomBytes(32).toString('hex'); sessions.set(token,Date.now()+8*3600000); res.setHeader('Set-Cookie',`session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${process.env.NODE_ENV==='production'?'; Secure':''}`); return json(res,200,{ok:true}); }
  if(url.pathname.startsWith('/api/')) {
  if(!authorized(req)) return json(res,401,{error:'Entre com a senha para acessar.'});
+ if(url.pathname==='/api/session' && req.method==='GET') return json(res,200,{authenticated:true});
  if(url.pathname==='/api/password' && req.method==='POST') {
   const ip=req.socket.remoteAddress;const now=Date.now();let attempt=attempts.get('password:'+ip);if(!attempt || attempt.until<now)attempt={count:0,until:now+900000};
   if(attempt.count>=10)return json(res,429,{error:'Muitas tentativas. Aguarde 15 minutos.'});
