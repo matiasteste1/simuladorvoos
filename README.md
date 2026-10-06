@@ -1,6 +1,6 @@
 # Simulador de viagem
 
-Site para uma pessoa, com passagens SerpApi/Google Voos, orçamento local, configurações protegidas e termômetro da cota real da conta (Account API). Chaves não são devolvidas ao navegador. Não inclui sincronização ao vivo: use compartilhamento de tela na reunião.
+Site para uma pessoa, com passagens SerpApi/Google Voos, lista local de múltiplas passagens e soma de seus preços, configurações protegidas e termômetro da cota real da conta (Account API). Pesquise cada trecho separadamente e adicione opções à viagem (8 ou mais passagens, sem limite fixo). Uma passagem ida e volta conta como uma opção com preço total; conexões não são somadas novamente. É possível remover opções e a lista permanece no navegador ao recarregar. Não inclui hospedagem ou outros gastos. Chaves não são devolvidas ao navegador. Não inclui sincronização ao vivo: use compartilhamento de tela na reunião.
 
 ## Executar no Windows (Node.js 22 ou superior)
 
@@ -22,7 +22,7 @@ O site inteiro exige a senha para consultar a API, evitando consumo público da 
 - A cota é consultada no servidor com cache de 60 segundos; atualizada após pesquisas. O termômetro mede consumo mensal, não consumo horário. Créditos extras podem fazer o saldo diferir da cota mensal.
 - Não há troca automática de contas para contornar limites. Trocar a chave da mesma conta não renova a cota.
 - Busca de só ida ou ida e volta; na ida e volta, a seleção detalhada da volta e o preço final devem ser confirmados no Google Voos. Bagagem e outras condições podem alterar o valor.
-- Sugestões locais de cidades e aeroportos: principais destinos brasileiros e alguns internacionais. Não é um catálogo mundial; códigos IATA podem ser digitados manualmente. A digitação não consome consultas. Em viagens só de ida, ajuste manualmente a duração da estadia no orçamento.
+- Sugestões locais de cidades e aeroportos: principais destinos brasileiros e alguns internacionais. Não é um catálogo mundial; códigos IATA podem ser digitados manualmente. A digitação não consome consultas.
 - Fornecedor único: SerpApi. Não é uma API oficial do Google. Uma busca pode retornar várias opções, e consultas adicionais podem consumir mais créditos.
 - O sistema nunca faz reservas nem compras.
 
