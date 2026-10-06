@@ -5,7 +5,7 @@ const crypto = require('node:crypto');
 const root = path.join(__dirname, 'public');
 const data = process.env.DATA_DIR || path.join(__dirname, 'data');
 const password = process.env.ADMIN_PASSWORD;
-if (!password || password.length < 12) { console.error('Defina ADMIN_PASSWORD com pelo menos 12 caracteres antes de iniciar.'); process.exit(1); }
+if (!password) { console.error('Defina ADMIN_PASSWORD antes de iniciar.'); process.exit(1); }
 const sessions = new Map();
 const attempts = new Map();
 let key = process.env.SERPAPI_KEY || '';
@@ -46,7 +46,7 @@ const server=http.createServer(async(req,res)=>{ try {
  }
  return json(res,404,{error:'Não encontrado.'}); }
  if(req.method!=='GET') return json(res,405,{error:'Método não permitido.'});
- const names={'/':'index.html','/app.js':'app.js','/airports.js':'airports.js','/style.css':'style.css'}; const filename=names[url.pathname]; if(!filename) return json(res,404,{error:'Não encontrado.'});
+ const names={'/':'index.html','/app.js':'app.js','/airports.js':'airports.js','/theme.js':'theme.js','/style.css':'style.css'}; const filename=names[url.pathname]; if(!filename) return json(res,404,{error:'Não encontrado.'});
  res.writeHead(200,{'Content-Type':filename.endsWith('.js')?'text/javascript; charset=utf-8':filename.endsWith('.css')?'text/css; charset=utf-8':'text/html; charset=utf-8','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",'X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'}); res.end(await fs.readFile(path.join(root,filename)));
  } catch(e) { console.error('Falha na operação:',e.name); json(res,502,{error:e.name==='TimeoutError'?'A consulta demorou demais. Tente novamente.':e.message.startsWith('A SerpApi')?e.message:'Não foi possível concluir a operação.'}); } });
 init().then(()=>server.listen(process.env.PORT || 3000,'0.0.0.0',()=>console.log('Simulador disponível na porta '+(process.env.PORT || 3000))));

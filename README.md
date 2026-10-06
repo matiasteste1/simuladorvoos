@@ -13,7 +13,9 @@ Abra http://localhost:3000, entre com a senha e cadastre uma **nova** chave na a
 
 ## Publicar online
 
-Use hospedagem que execute Node.js, como um serviço web com disco persistente. Comando de início: `npm start`. Defina `ADMIN_PASSWORD` (mínimo 12 caracteres), `NODE_ENV=production` e, opcionalmente, `DATA_DIR` apontando para o disco persistente. O serviço deve oferecer HTTPS e encaminhar `X-Forwarded-Proto: https`. A porta é lida de `PORT`. Sem disco persistente, a chave salva pela interface pode desaparecer em reinicializações; alternativamente configure `SERPAPI_KEY` no painel da hospedagem.
+Use hospedagem que execute Node.js, como um serviço web com disco persistente. Comando de início: `npm start`. Defina `ADMIN_PASSWORD`, `NODE_ENV=production` e, opcionalmente, `DATA_DIR` apontando para o disco persistente. Senhas simples como `senha123` são permitidas, mas não recomendadas: alguém que descobrir a senha pode consumir a cota e trocar a chave. No Render, altere `ADMIN_PASSWORD` em Environment e salve para republicar. O serviço deve oferecer HTTPS e encaminhar `X-Forwarded-Proto: https`. A porta é lida de `PORT`. Sem disco persistente, a chave salva pela interface pode desaparecer em reinicializações; alternativamente configure `SERPAPI_KEY` no painel da hospedagem.
+
+O botão de tema alterna entre claro e escuro. A escolha fica salva neste navegador; no primeiro acesso, segue a preferência do sistema.
 
 O site inteiro exige a senha para consultar a API, evitando consumo público da cota. Participantes com a senha também podem trocar a chave. Para acesso público ou equipes maiores, adicione usuários, papéis administrativos e limitação de consultas por usuário antes de publicar.
 
