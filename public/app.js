@@ -12,5 +12,26 @@ function calculate(){const n=id=>Math.max(0,Number($(id).value)||0);const hotel=
 try{const saved=JSON.parse(localStorage.getItem('budget')||'{}');for(const id of fields)if(saved[id]!==undefined)$(id).value=saved[id];}catch{}for(const id of fields)$(id).oninput=calculate;calculate();
 const today=new Date().toISOString().slice(0,10);$('departure').min=today;$('return').min=today;
 $('departure').onchange=()=>{$('return').min=$('departure').value||today;};
-$('searchForm').onsubmit=async e=>{e.preventDefault();$('searchButton').disabled=true;$('searchButton').textContent='Consultando…';$('results').replaceChildren();message('');try{const r=await request('/api/flights',{origin:$('origin').value.trim().toUpperCase(),destination:$('destination').value.trim().toUpperCase(),departure:$('departure').value,return:$('return').value});if(!r.flights.length)message('Nenhuma opção encontrada. Tente outras datas ou informe o preço manualmente.');for(const f of r.flights.slice(0,20)){const row=document.createElement('div');row.className='flight';const info=document.createElement('div');const price=document.createElement('strong');price.textContent=money(f.price);const description=document.createElement('p');description.textContent=f.segments.map(s=>`${s.airline} · ${s.from} → ${s.to} · ${s.time}`).join(' / ');const detail=document.createElement('p');detail.className='muted';detail.textContent=`${f.stops} conexão(ões) · ${f.duration} min · Preço indicado para ida e volta`;info.append(price,description,detail);const button=document.createElement('button');button.textContent='Usar no orçamento';button.onclick=()=>{$('fare').value=f.price;calculate();message('Passagem adicionada ao orçamento. Confirme a opção de volta e o preço final no Google Voos.');};row.append(info,button);$('results').append(row);}const nights=Math.round((Date.parse($('return').value)-Date.parse($('departure').value))/86400000);$('nights').value=nights;$('days').value=nights+1;calculate();await quota();}catch(e){message(e.message);}finally{$('searchButton').disabled=false;$('searchButton').textContent='Buscar passagens';}};
+let tripType='roundtrip';
+function setTripType(type){tripType=type;const oneWay=type==='oneway';$('returnField').hidden=oneWay;$('return').required=!oneWay;$('return').disabled=oneWay;$('oneway').setAttribute('aria-pressed',String(oneWay));$('roundtrip').setAttribute('aria-pressed',String(!oneWay));$('searchHint').textContent=`1 adulto · Econômica · ${oneWay?'Só ida':'Ida e volta'} · Valores em reais.`;document.querySelector('label[for="fare"]')?.remove();$('fare').parentElement.firstChild.textContent=`Passagem — ${oneWay?'só ida':'ida e volta'} (R$)`;}
+$('oneway').onclick=()=>setTripType('oneway');$('roundtrip').onclick=()=>setTripType('roundtrip');
+$('searchForm').onsubmit=async e=>{
+ e.preventDefault();
+ const origin=airportCode($('origin').value),destination=airportCode($('destination').value);
+ for(const id of ['origin','destination']){if(!airportCode($(id).value)){ $(id).setCustomValidity('Selecione um aeroporto nas sugestões ou informe seu código IATA.');$(id).reportValidity();return;}}
+ const searchType=tripType,departure=$('departure').value,returnDate=$('return').value;
+ $('searchButton').disabled=true;$('searchButton').textContent='Consultando…';$('results').replaceChildren();message('');
+ try{
+  const r=await request('/api/flights',{origin,destination,departure,return:returnDate,type:searchType});
+  if(!r.flights.length)message('Nenhuma opção encontrada. Tente outras datas ou informe o preço manualmente.');
+  for(const f of r.flights.slice(0,20)){
+   const row=document.createElement('div');row.className='flight';const info=document.createElement('div');const price=document.createElement('strong');price.textContent=money(f.price);
+   const description=document.createElement('p');description.textContent=f.segments.map(s=>`${s.airline} · ${s.from} → ${s.to} · ${s.time}`).join(' / ');
+   const detail=document.createElement('p');detail.className='muted';detail.textContent=`${f.stops===0?'Direto':f.stops+' conexão(ões)'} · ${f.duration} min · ${r.type==='oneway'?'Só ida':'Ida e volta'}`;
+   info.append(price,description,detail);const button=document.createElement('button');button.textContent='Selecionar';button.onclick=()=>{setTripType(r.type);$('fare').value=f.price;calculate();message(r.type==='oneway'?'Passagem de ida adicionada. Confira taxas e bagagem antes da compra.':'Passagem adicionada. Confirme a opção de volta e o preço final no Google Voos.');};row.append(info,button);$('results').append(row);
+  }
+  if(searchType==='roundtrip'){const nights=Math.round((Date.parse(returnDate)-Date.parse(departure))/86400000);$('nights').value=nights;$('days').value=nights+1;}else{message('Busca de só ida concluída. Defina manualmente os dias de viagem e as noites de hospedagem.');}
+  calculate();await quota();
+ }catch(e){message(e.message);}finally{$('searchButton').disabled=false;$('searchButton').textContent='Buscar passagens →';}
+};
 quota();
