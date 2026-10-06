@@ -8,6 +8,7 @@ $('loginForm').onsubmit=async e=>{e.preventDefault();try{await request('/api/log
 function tab(settings){$('settings').hidden=!settings;$('trip').hidden=settings;$('settingsTab').setAttribute('aria-pressed',String(settings));$('tripTab').setAttribute('aria-pressed',String(!settings));}
 $('settingsTab').onclick=()=>tab(true);$('tripTab').onclick=()=>tab(false);$('refresh').onclick=quota;
 $('settingsForm').onsubmit=async e=>{e.preventDefault();const button=e.target.querySelector('button');button.disabled=true;try{await request('/api/settings',{key:$('apiKey').value});$('apiKey').value='';message('Chave validada e salva no servidor.');await quota();}catch(e){message(e.message);}finally{button.disabled=false;}};
+$('passwordForm').onsubmit=async e=>{e.preventDefault();if($('newPassword').value!==$('confirmPassword').value){message('A confirmação não corresponde à nova senha.');return;}const button=e.target.querySelector('button');button.disabled=true;try{await request('/api/password',{currentPassword:$('currentPassword').value,newPassword:$('newPassword').value});e.target.reset();$('workspace').hidden=true;$('login').hidden=false;tab(false);message('Senha alterada. Entre novamente com sua nova senha.');$('password').focus();}catch(e){message(e.message);}finally{button.disabled=false;}};
 function calculate(){
  $('selectedFlights').replaceChildren();
  if(!selectedFlights.length){const empty=document.createElement('p');empty.className='muted';empty.textContent='Nenhum voo selecionado. Busque seu primeiro trecho acima.';$('selectedFlights').append(empty);}

@@ -17,6 +17,8 @@ Use hospedagem que execute Node.js, como um serviço web com disco persistente. 
 
 O botão de tema alterna entre claro e escuro. A escolha fica salva neste navegador; no primeiro acesso, segue a preferência do sistema.
 
+A senha pode ser alterada em **Configurações → Alterar senha de acesso**, mediante a senha atual. É armazenada com scrypt e salt em `data/auth.json`, nunca em texto simples, e todas as sessões são encerradas após a troca. O arquivo prevalece sobre `ADMIN_PASSWORD` enquanto existir. No Render gratuito, esse arquivo pode desaparecer em reinicializações; para persistir nesse plano, altere também `ADMIN_PASSWORD` no painel. Use disco persistente para manter alterações feitas pelo site. Proteja os backups da pasta `data`.
+
 O site inteiro exige a senha para consultar a API, evitando consumo público da cota. Participantes com a senha também podem trocar a chave. Para acesso público ou equipes maiores, adicione usuários, papéis administrativos e limitação de consultas por usuário antes de publicar.
 
 ## Limitações

@@ -6,13 +6,16 @@ const root = path.join(__dirname, 'public');
 const data = process.env.DATA_DIR || path.join(__dirname, 'data');
 const password = process.env.ADMIN_PASSWORD;
 if (!password) { console.error('Defina ADMIN_PASSWORD antes de iniciar.'); process.exit(1); }
+let passwordSalt=crypto.randomBytes(16).toString('hex');
+let passwordHash=crypto.scryptSync(password,passwordSalt,64).toString('hex');
+function validPassword(candidate){return crypto.timingSafeEqual(crypto.scryptSync(String(candidate||''),passwordSalt,64),Buffer.from(passwordHash,'hex'));}
 const sessions = new Map();
 const attempts = new Map();
 let key = process.env.SERPAPI_KEY || '';
 let quota;
 let quotaTime = 0;
 let searching = false;
-async function init() { await fs.mkdir(data, {recursive:true}); try { key = (JSON.parse(await fs.readFile(path.join(data,'settings.json'),'utf8'))).key || key; } catch(e) { if(e.code !== 'ENOENT') throw e; } }
+async function init() { await fs.mkdir(data, {recursive:true}); try { key = (JSON.parse(await fs.readFile(path.join(data,'settings.json'),'utf8'))).key || key; } catch(e) { if(e.code !== 'ENOENT') throw e; } try {const saved=JSON.parse(await fs.readFile(path.join(data,'auth.json'),'utf8'));if(!/^[a-f0-9]{32}$/.test(saved.salt) || !/^[a-f0-9]{128}$/.test(saved.hash)) throw new Error('Configuração de senha inválida.');passwordSalt=saved.salt;passwordHash=saved.hash;}catch(e){if(e.code!=='ENOENT')throw e;} }
 function json(res, status, body) { res.writeHead(status, {'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}); res.end(JSON.stringify(body)); }
 async function body(req) { let text=''; for await (const chunk of req) { text+=chunk; if(text.length>8192) throw new Error('Dados muito grandes.'); } return JSON.parse(text || '{}'); }
 function authorized(req) { const token = /(?:^|;\s*)session=([a-f0-9]+)/.exec(req.headers.cookie || '')?.[1]; return sessions.get(token)>Date.now(); }
@@ -21,9 +24,19 @@ async function usage(force=false) { if(!key) return {configured:false}; if(!quot
 const server=http.createServer(async(req,res)=>{ try {
  const url=new URL(req.url,'http://localhost');
  if(req.method==='POST' && req.headers.origin && req.headers.origin!==`${req.headers['x-forwarded-proto'] || 'http'}://${req.headers.host}`) return json(res,403,{error:'Origem não permitida.'});
- if(url.pathname==='/api/login' && req.method==='POST') { const ip=req.socket.remoteAddress; let attempt=attempts.get(ip); if(!attempt || attempt.until<Date.now()) attempt={count:0,until:Date.now()+900000}; if(attempt.count>=10) return json(res,429,{error:'Muitas tentativas. Aguarde 15 minutos.'}); const b=await body(req); const a=crypto.createHash('sha256').update(String(b.password||'')).digest(); const z=crypto.createHash('sha256').update(password).digest(); if(!crypto.timingSafeEqual(a,z)) {attempt.count++; attempts.set(ip,attempt); return json(res,401,{error:'Senha incorreta.'});} const token=crypto.randomBytes(32).toString('hex'); sessions.set(token,Date.now()+8*3600000); res.setHeader('Set-Cookie',`session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${process.env.NODE_ENV==='production'?'; Secure':''}`); return json(res,200,{ok:true}); }
+ if(url.pathname==='/api/login' && req.method==='POST') { const ip=req.socket.remoteAddress; let attempt=attempts.get(ip); if(!attempt || attempt.until<Date.now()) attempt={count:0,until:Date.now()+900000}; if(attempt.count>=10) return json(res,429,{error:'Muitas tentativas. Aguarde 15 minutos.'}); const b=await body(req); if(!validPassword(b.password)) {attempt.count++; attempts.set(ip,attempt); return json(res,401,{error:'Senha incorreta.'});} const token=crypto.randomBytes(32).toString('hex'); sessions.set(token,Date.now()+8*3600000); res.setHeader('Set-Cookie',`session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${process.env.NODE_ENV==='production'?'; Secure':''}`); return json(res,200,{ok:true}); }
  if(url.pathname.startsWith('/api/')) {
  if(!authorized(req)) return json(res,401,{error:'Entre com a senha para acessar.'});
+ if(url.pathname==='/api/password' && req.method==='POST') {
+  const ip=req.socket.remoteAddress;const now=Date.now();let attempt=attempts.get('password:'+ip);if(!attempt || attempt.until<now)attempt={count:0,until:now+900000};
+  if(attempt.count>=10)return json(res,429,{error:'Muitas tentativas. Aguarde 15 minutos.'});
+  const b=await body(req);if(!validPassword(b.currentPassword)){attempt.count++;attempts.set('password:'+ip,attempt);return json(res,400,{error:'Senha atual incorreta.'});}
+  if(typeof b.newPassword!=='string' || b.newPassword.length<1 || b.newPassword.length>128 || !b.newPassword.trim())return json(res,400,{error:'Informe uma senha de 1 a 128 caracteres.'});
+  const salt=crypto.randomBytes(16).toString('hex'),hash=crypto.scryptSync(b.newPassword,salt,64).toString('hex');
+  const temp=path.join(data,'auth.tmp');await fs.writeFile(temp,JSON.stringify({salt,hash}),{mode:0o600});await fs.rename(temp,path.join(data,'auth.json'));passwordSalt=salt;passwordHash=hash;
+  sessions.clear();attempts.delete('password:'+ip);
+  res.setHeader('Set-Cookie','session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return json(res,200,{ok:true});
+ }
  if(url.pathname==='/api/status' && req.method==='GET') return json(res,200,await usage());
  if(url.pathname==='/api/settings' && req.method==='POST') { const b=await body(req); const candidate=String(b.key||'').trim(); if(!/^[a-fA-F0-9]{64}$/.test(candidate)) return json(res,400,{error:'Informe uma chave SerpApi válida.'}); await api('account.json',{},candidate); const temp=path.join(data,'settings.tmp'); await fs.writeFile(temp,JSON.stringify({key:candidate}),{mode:0o600}); await fs.rename(temp,path.join(data,'settings.json')); key=candidate; quota=null; return json(res,200,await usage(true)); }
  if(url.pathname==='/api/flights' && req.method==='POST') {
