@@ -1,5 +1,5 @@
-// Curadoria local: sem consultas de API ao digitar. Não é um catálogo mundial.
-const airports = [
+// Local search: regional dataset plus curated destinations and Portuguese aliases.
+const curatedAirports = [
  ['GRU','São Paulo','Guarulhos'],['CGH','São Paulo','Congonhas'],['VCP','Campinas','Viracopos'],
  ['GIG','Rio de Janeiro','Galeão'],['SDU','Rio de Janeiro','Santos Dumont'],['BSB','Brasília','Juscelino Kubitschek'],
  ['CNF','Belo Horizonte','Confins'],['PLU','Belo Horizonte','Pampulha'],['REC','Recife','Guararapes'],
@@ -23,8 +23,11 @@ const airports = [
  ['MAD','Madri','Barajas'],['BCN','Barcelona','El Prat'],['LHR','Londres','Heathrow'],['FCO','Roma','Fiumicino'],
  ['AMS','Amsterdã','Schiphol'],['FRA','Frankfurt','Frankfurt'],['DXB','Dubai','Dubai International'],['CUN','Cancún','Cancún International']
 ];
+const mergedAirports=new Map(regionalAirports.map(a=>[a[0],a]));
+for(const a of curatedAirports){const regional=mergedAirports.get(a[0]);mergedAirports.set(a[0],[...a,regional?.[3]||'Internacional']);}
+const airports=[...mergedAirports.values()];
 const normalizeAirport = text => text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-const airportLabel = a => `${a[1]} — ${a[2]} (${a[0]})`;
+const airportLabel = a => `${a[1]} — ${a[2]} (${a[0]}) · ${a[3]}`;
 function airportCode(text) {
  const exact=airports.find(a=>normalizeAirport(airportLabel(a))===normalizeAirport(text.trim()));
  if(exact) return exact[0];

@@ -26,7 +26,7 @@ O site inteiro exige a senha para consultar a API, evitando consumo público da 
 - A cota é consultada no servidor com cache de 60 segundos; atualizada após pesquisas. O termômetro mede consumo mensal, não consumo horário. Créditos extras podem fazer o saldo diferir da cota mensal.
 - Não há troca automática de contas para contornar limites. Trocar a chave da mesma conta não renova a cota.
 - Busca de só ida ou ida e volta; na ida e volta, a seleção detalhada da volta e o preço final devem ser confirmados no Google Voos. Bagagem e outras condições podem alterar o valor.
-- Sugestões locais de cidades e aeroportos: principais destinos brasileiros e alguns internacionais. Não é um catálogo mundial; códigos IATA podem ser digitados manualmente. A digitação não consome consultas.
+- Sugestões locais de cidades e aeroportos: todos os registros não fechados com código IATA de Brasil, Argentina e Chile na base OurAirports, via datasets/airport-codes (domínio público), além de destinos internacionais selecionados. Não é um catálogo mundial nem garantia de operação comercial. Códigos IATA podem ser digitados manualmente. A digitação não consome consultas. Atualize a base com `node scripts/update-airports.cjs`; o arquivo gerado `public/airports-data.js` deve ser incluído no Git. Busca por cidade, país, nome ou código, ignorando acentos.
 - Fornecedor único: SerpApi. Não é uma API oficial do Google. Uma busca pode retornar várias opções, e consultas adicionais podem consumir mais créditos.
 - O sistema nunca faz reservas nem compras.
 
