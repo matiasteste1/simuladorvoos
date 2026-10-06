@@ -15,7 +15,7 @@ Abra http://localhost:3000, entre com a senha e cadastre uma **nova** chave na a
 
 Use hospedagem que execute Node.js, como um serviço web com disco persistente. Comando de início: `npm start`. Defina `ADMIN_PASSWORD`, `NODE_ENV=production` e, opcionalmente, `DATA_DIR` apontando para o disco persistente. Senhas simples como `senha123` são permitidas, mas não recomendadas: alguém que descobrir a senha pode consumir a cota e trocar a chave. No Render, altere `ADMIN_PASSWORD` em Environment e salve para republicar. O serviço deve oferecer HTTPS e encaminhar `X-Forwarded-Proto: https`. A porta é lida de `PORT`. Sem disco persistente, a chave salva pela interface pode desaparecer em reinicializações; alternativamente configure `SERPAPI_KEY` no painel da hospedagem.
 
-O botão de tema alterna entre claro e escuro. A escolha fica salva neste navegador; no primeiro acesso, segue a preferência do sistema.
+O botão de tema alterna entre claro e escuro. No primeiro acesso, o site inicia no tema claro (branco), independentemente do tema do sistema. A escolha manual fica salva neste navegador.
 
 A senha pode ser alterada em **Configurações → Alterar senha de acesso**, mediante a senha atual. É armazenada com scrypt e salt em `data/auth.json`, nunca em texto simples, e todas as sessões são encerradas após a troca. O arquivo prevalece sobre `ADMIN_PASSWORD` enquanto existir. No Render gratuito, esse arquivo pode desaparecer em reinicializações; para persistir nesse plano, altere também `ADMIN_PASSWORD` no painel. Use disco persistente para manter alterações feitas pelo site. Proteja os backups da pasta `data`.
 

@@ -1,7 +1,7 @@
 (() => {
  let theme;
  try { theme=localStorage.getItem('travelTheme'); } catch {}
- if(theme!=='light' && theme!=='dark') theme=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+  if(theme!=='light' && theme!=='dark') theme='light';
  document.documentElement.dataset.theme=theme;
  document.addEventListener('DOMContentLoaded',()=>{
   const button=document.getElementById('themeToggle');
